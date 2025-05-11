@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Phone Book with WhatsApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+    .phone-book {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #contactList {
+      list-style: none;
+      padding: 0;
+    }
+    #contactList li {
+      background: #f1f1f1;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+    }
+    #contactList li span {
+      margin-bottom: 5px;
+    }
+    #contactList li .buttons {
+      display: flex;
+      gap: 5px;
+    }
+    .edit-btn {
+      background: #ffc107;
+    }
+    .edit-btn:hover {
+      background: #e0a800;
+    }
+    .delete-btn {
+      background: #dc3545;
+    }
+    .delete-btn:hover {
+      background: #a71d2a;
+    }
+    .whatsapp-btn {
+      background: #25d366;
+    }
+    .whatsapp-btn:hover {
+      background: #1ebd50;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-book">
+    <h1>Advanced Phone Book with WhatsApp</h1>
+    <div class="form">
+      <input type="text" id="organization" placeholder="Enter Organization Name" required>
+      <input type="text" id="web" placeholder="Enter Web Address (e.g., https://example.com)">
+      <input type="text" id="userId" placeholder="Enter User ID">
+      <input type="password" id="password" placeholder="Enter Password">
+      <label>
+        <input type="checkbox" id="important"> Mark as Important
+      </label>
+      <button id="addContact">Add Contact</button>
+    </div>
+
+    <div>
+      <h2>Contact List</h2>
+      <ul id="contactList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const organizationInput = document.getElementById("organization");
+    const webInput = document.getElementById("web");
+    const userIdInput = document.getElementById("userId");
+    const passwordInput = document.getElementById("password");
+    const importantCheckbox = document.getElementById("important");
+    const addContactBtn = document.getElementById("addContact");
+    const contactList = document.getElementById("contactList");
+
+    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+    let editIndex = null;
+
+    function saveContacts() {
+      localStorage.setItem("contacts", JSON.stringify(contacts));
+    }
+
+    function displayContacts() {
+      contactList.innerHTML = "";
+      contacts.forEach((contact, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span><strong>Organization:</strong> ${contact.organization}</span>
+          <span><strong>Web:</strong> <a href="${contact.web}" target="_blank">${contact.web}</a></span>
+          <span><strong>User ID:</strong> ${contact.userId}</span>
+          <span><strong>Password:</strong> ${contact.password}</span>
+          <span><strong>Important:</strong> ${contact.important ? "Yes" : "No"}</span>
+          <div class="buttons">
+            <button class="whatsapp-btn" onclick="sendToWhatsApp(${index})">Send to WhatsApp</button>
+            <button class="edit-btn" onclick="editContact(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteContact(${index})">Delete</button>
+          </div>
+        `;
+        contactList.appendChild(li);
+      });
+    }
+
+    function addOrUpdateContact() {
+      const organization = organizationInput.value.trim();
+      const web = webInput.value.trim();
+      const userId = userIdInput.value.trim();
+      const password = passwordInput.value.trim();
+      const important = importantCheckbox.checked;
+
+      if (!organization || !userId) {
+        alert("Organization Name and User ID are required!");
+        return;
+      }
+
+      const newContact = { organization, web, userId, password, important };
+
+      if (editIndex !== null) {
+        contacts[editIndex] = newContact;
+        editIndex = null;
+        addContactBtn.textContent = "Add Contact";
+      } else {
+        contacts.push(newContact);
+      }
+
+      saveContacts();
+      displayContacts();
+      clearForm();
+    }
+
+    function editContact(index) {
+      const contact = contacts[index];
+      organizationInput.value = contact.organization;
+      webInput.value = contact.web;
+      userIdInput.value = contact.userId;
+      passwordInput.value = contact.password;
+      importantCheckbox.checked = contact.important;
+      editIndex = index;
+      addContactBtn.textContent = "Update Contact";
+    }
+
+    function deleteContact(index) {
+      const confirmation = confirm("Are you sure you want to delete this contact?");
+      if (confirmation) {
+        contacts.splice(index, 1);
+        saveContacts();
+        displayContacts();
+      }
+    }
+
+    function sendToWhatsApp(index) {
+      const contact = contacts[index];
+      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
+      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappURL, "_blank");
+    }
+
+    function clearForm() {
+      organizationInput.value = "";
+      webInput.value = "";
+      userIdInput.value = "";
+      passwordInput.value = "";
+      importantCheckbox.checked = false;
+    }
+
+    addContactBtn.addEventListener("click", addOrUpdateContact);
+    displayContacts();
+  </script>
+</body>
+</html>
