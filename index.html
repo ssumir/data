@@ -4,112 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Significant Data Holder</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f9f9f9;
-    }
-    .phone-book {
-      max-width: 700px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    h1, h2 {
-      text-align: center;
-      color: #333;
-    }
-    .form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    input, select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #contactList {
-      list-style: none;
-      padding: 0;
-    }
-    #contactList li {
-      background: #f1f1f1;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-    }
-    #contactList li span {
-      margin-bottom: 5px;
-    }
-    #contactList li .buttons {
-      display: flex;
-      gap: 5px;
-    }
-    .edit-btn {
-      background: #ffc107;
-    }
-    .edit-btn:hover {
-      background: #e0a800;
-    }
-    .delete-btn {
-      background: #dc3545;
-    }
-    .delete-btn:hover {
-      background: #a71d2a;
-    }
-    .whatsapp-btn {
-      background: #25d366;
-    }
-    .whatsapp-btn:hover {
-      background: #1ebd50;
-    }
-    footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.9em;
-      color: #666;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="phone-book">
-    <h1>Significant Data Holder</h1>
-    <div class="form">
-      <input type="text" id="organization" placeholder="Enter Organization Name" required>
-      <input type="text" id="web" placeholder="Enter Web Address (e.g., https://example.com)">
-      <input type="text" id="userId" placeholder="Enter User ID">
-      <input type="password" id="password" placeholder="Enter Password">
-      <label>
-        <input type="checkbox" id="important"> Mark as Important
-      </label>
-      <button id="addContact">Add Data</button>
+<body class="bg-gray-100">
+  <div class="max-w-2xl mx-auto mt-10 p-12 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold text-center text-gray-800">Significant Data Holder</h1>
+    <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
+      <input type="password" id="entryPassword" placeholder="Enter Password to Access Data" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button id="checkPassword" class="p-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+        Check Password
+      </button>
     </div>
-    <div>
-      <h2>Data List</h2>
-      <ul id="contactList"></ul>
+    <div id="dataContainer" class="hidden mt-6">
+      <div class="flex flex-col gap-4 mb-6">
+        <input type="text" id="organization" placeholder="Enter Organization Name" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="web" placeholder="Enter Web Address (e.g., https://example.com)" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="userId" placeholder="Enter User ID" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="password" id="password" placeholder="Enter Password" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="flex items-center">
+          <input type="checkbox" id="important" class="mr-2">
+          <span>Mark as Important</span>
+        </label>
+        <button id="addContact" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
+          Add Data
+        </button>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-800">Data List</h2>
+      <div class="mb-4">
+        <input type="text" id="filterInput" placeholder="Search..." class="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <ul id="contactList" class="list-none mt-4 space-y-4"></ul>
     </div>
   </div>
-  <footer>
-    Powered by Saiful Islam Sumir
+  <footer class="text-center mt-5 text-sm text-gray-500">
+    Powered by Eng. Saiful Islam (Sumir).
   </footer>
 
   <script>
@@ -120,7 +48,13 @@
     const importantCheckbox = document.getElementById("important");
     const addContactBtn = document.getElementById("addContact");
     const contactList = document.getElementById("contactList");
+    const entryPasswordInput = document.getElementById("entryPassword");
+    const checkPasswordBtn = document.getElementById("checkPassword");
+    const dataContainer = document.getElementById("dataContainer");
+    const passwordDiv = document.getElementById("passwordDiv");
+    const filterInput = document.getElementById("filterInput");
 
+    const ACCESS_PASSWORD = "12345"; // Replace with your secure password
     let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
     let editIndex = null;
 
@@ -128,19 +62,20 @@
       localStorage.setItem("contacts", JSON.stringify(contacts));
     }
 
-    function displayContacts() {
+    function displayContacts(filteredContacts = contacts) {
       contactList.innerHTML = "";
-      contacts.forEach((contact, index) => {
+      filteredContacts.forEach((contact, index) => {
         const li = document.createElement("li");
+        li.className = "p-4 bg-gray-200 rounded-lg shadow-sm";
         li.innerHTML = `
-          <span><strong>Organization:</strong> ${contact.organization}</span>
-          <span><strong>Web:</strong> <a href="${contact.web}" target="_blank">${contact.web}</a></span>
-          <span><strong>User ID:</strong> ${contact.userId}</span>
-          <span><strong>Important:</strong> ${contact.important ? "Yes" : "No"}</span>
-          <div class="buttons">
-            <button class="whatsapp-btn" onclick="sendToWhatsApp(${index})">Send to WhatsApp</button>
-            <button class="edit-btn" onclick="editContact(${index})">Edit</button>
-            <button class="delete-btn" onclick="deleteContact(${index})">Delete</button>
+          <span class="block font-medium"><strong>Organization:</strong> ${contact.organization}</span>
+          <span class="block"><strong>Web:</strong> <a href="${contact.web}" target="_blank" class="text-blue-500 hover:underline">${contact.web}</a></span>
+          <span class="block"><strong>User ID:</strong> ${contact.userId}</span>
+          <span class="block"><strong>Important:</strong> ${contact.important ? "Yes" : "No"}</span>
+          <div class="flex gap-2 mt-4">
+            <button class="whatsapp-btn p-2 bg-green-500 text-white rounded hover:bg-green-600" onclick="sendToWhatsApp(${index})">Send to WhatsApp</button>
+            <button class="edit-btn p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" onclick="editContact(${index})">Edit</button>
+            <button class="delete-btn p-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="deleteContact(${index})">Delete</button>
           </div>
         `;
         contactList.appendChild(li);
@@ -209,7 +144,33 @@
       importantCheckbox.checked = false;
     }
 
+    function checkPassword() {
+      const enteredPassword = entryPasswordInput.value.trim();
+      if (enteredPassword === ACCESS_PASSWORD) {
+        passwordDiv.style.display = "none"; // Hide password section
+        dataContainer.style.display = "block"; // Show data list
+        alert("Access granted!");
+      } else {
+        alert("Incorrect password. Please try again.");
+      }
+    }
+
+    function filterContacts() {
+      const query = filterInput.value.trim().toLowerCase();
+      const filteredContacts = contacts.filter(contact =>
+        Object.entries(contact).some(([key, value]) =>
+          key === "important"
+            ? (contact.important ? "yes" : "no").includes(query) // Special handling for important status
+            : value.toString().toLowerCase().includes(query)
+        )
+      );
+
+      displayContacts(filteredContacts);
+    }
+
     addContactBtn.addEventListener("click", addOrUpdateContact);
+    checkPasswordBtn.addEventListener("click", checkPassword);
+    filterInput.addEventListener("input", filterContacts); // Trigger filter on input change
     displayContacts();
   </script>
 </body>
