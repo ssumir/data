@@ -136,16 +136,13 @@
     }
 
     function sendToWhatsApp(index) {
-      const contact = contacts[index];
-      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
-      const encodedMessage = encodeURIComponent(message);
-    
-      // Use the WhatsApp Web URL that automatically redirects to the app if available
-      const whatsappURL = `https://wa.me/?text=${encodedMessage}`;
-    
-      // Open the URL
-      window.open(whatsappURL, "_blank");
-    }
+  const contact = contacts[index];
+  const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
+  const whatsappURL = `intent://send/?text=${encodeURIComponent(message)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+
+  // Attempt to open the WhatsApp app
+  window.location.href = whatsappURL;
+}
 
     function clearForm() {
       elements.organization.value = "";
