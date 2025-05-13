@@ -137,8 +137,8 @@
 
     function sendToWhatsApp(index) {
       const contact = contacts[index];
-      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nImportant: ${contact.important ? "Yes" : "No"}`;
-      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
+      const whatsappURL = `https://wa.me/${contact.userId}?text=${encodeURIComponent(message)}`;
       window.open(whatsappURL, "_blank");
     }
 
