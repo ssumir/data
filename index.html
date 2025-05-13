@@ -141,7 +141,7 @@
     const encodedMessage = encodeURIComponent(message);
   
     // Deep link for Android to open the WhatsApp app directly
-    const whatsappURL = `whatsapp://send?text=${encodedMessage}`;
+    const whatsappURL = `https://chat.whatsapp.com/?text=${encodedMessage}`;
       
     // Fallback for other devices or if WhatsApp is not installed
     const fallbackURL = `https://wa.me/?text=${encodedMessage}`;
