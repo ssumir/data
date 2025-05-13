@@ -136,24 +136,16 @@
     }
 
     function sendToWhatsApp(index) {
-    const contact = contacts[index];
-    const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
-    const encodedMessage = encodeURIComponent(message);
-  
-    // Deep link for Android to open the WhatsApp app directly
-    const whatsappURL = `https://chat.whatsapp.com/?text=${encodedMessage}`;
-      
-    // Fallback for other devices or if WhatsApp is not installed
-    const fallbackURL = `https://wa.me/?text=${encodedMessage}`;
+      const contact = contacts[index];
+      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
+      const encodedMessage = encodeURIComponent(message);
     
-    // Try opening the WhatsApp app; fallback to the web version
-    window.location.href = whatsappURL;
-  
-    setTimeout(() => {
-      window.open(fallbackURL, "_blank");
-    }, 500);
-  }
-
+      // Use the WhatsApp Web URL that automatically redirects to the app if available
+      const whatsappURL = `https://wa.me/?text=${encodedMessage}`;
+    
+      // Open the URL
+      window.open(whatsappURL, "_blank");
+    }
 
     function clearForm() {
       elements.organization.value = "";
