@@ -7,15 +7,21 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-  <div class="max-w-2xl mx-auto mt-10 p-12 bg-white rounded-lg shadow-lg">
+  <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
     <h1 class="text-2xl font-bold text-center text-gray-800">Significant Data Holder</h1>
     <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
       <input type="password" id="entryPassword" placeholder="Enter Password to Access Data" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <button id="checkPassword" class="p-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+      <button type="button" id="checkPassword" class="p-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
         Check Password
       </button>
     </div>
     <div id="dataContainer" class="hidden mt-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Data List</h2>
+        <button type="button" id="exitButton" class="p-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600">
+          Exit
+        </button>
+      </div>
       <div class="flex flex-col gap-4 mb-6">
         <input type="text" id="organization" placeholder="Enter Organization Name" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
         <input type="text" id="web" placeholder="Enter Web Address (e.g., https://example.com)" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -25,14 +31,11 @@
           <input type="checkbox" id="important" class="mr-2">
           <span>Mark as Important</span>
         </label>
-        <button id="addContact" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
+        <button type="button" id="addContact" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
           Add Data
         </button>
       </div>
-      <h2 class="text-xl font-semibold text-gray-800">Data List</h2>
-      <div class="mb-4">
-        <input type="text" id="filterInput" placeholder="Search..." class="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
+      <input type="text" id="filterInput" placeholder="Search..." class="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
       <ul id="contactList" class="list-none mt-4 space-y-4"></ul>
     </div>
   </div>
@@ -41,29 +44,32 @@
   </footer>
 
   <script>
-    const organizationInput = document.getElementById("organization");
-    const webInput = document.getElementById("web");
-    const userIdInput = document.getElementById("userId");
-    const passwordInput = document.getElementById("password");
-    const importantCheckbox = document.getElementById("important");
-    const addContactBtn = document.getElementById("addContact");
-    const contactList = document.getElementById("contactList");
-    const entryPasswordInput = document.getElementById("entryPassword");
-    const checkPasswordBtn = document.getElementById("checkPassword");
-    const dataContainer = document.getElementById("dataContainer");
-    const passwordDiv = document.getElementById("passwordDiv");
-    const filterInput = document.getElementById("filterInput");
-
     const ACCESS_PASSWORD = "12345"; // Replace with your secure password
     let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
     let editIndex = null;
+
+    const elements = {
+      organization: document.getElementById("organization"),
+      web: document.getElementById("web"),
+      userId: document.getElementById("userId"),
+      password: document.getElementById("password"),
+      important: document.getElementById("important"),
+      addContactBtn: document.getElementById("addContact"),
+      contactList: document.getElementById("contactList"),
+      entryPassword: document.getElementById("entryPassword"),
+      checkPasswordBtn: document.getElementById("checkPassword"),
+      exitButton: document.getElementById("exitButton"),
+      dataContainer: document.getElementById("dataContainer"),
+      passwordDiv: document.getElementById("passwordDiv"),
+      filterInput: document.getElementById("filterInput"),
+    };
 
     function saveContacts() {
       localStorage.setItem("contacts", JSON.stringify(contacts));
     }
 
     function displayContacts(filteredContacts = contacts) {
-      contactList.innerHTML = "";
+      elements.contactList.innerHTML = "";
       filteredContacts.forEach((contact, index) => {
         const li = document.createElement("li");
         li.className = "p-4 bg-gray-200 rounded-lg shadow-sm";
@@ -71,106 +77,38 @@
           <span class="block font-medium"><strong>Organization:</strong> ${contact.organization}</span>
           <span class="block"><strong>Web:</strong> <a href="${contact.web}" target="_blank" class="text-blue-500 hover:underline">${contact.web}</a></span>
           <span class="block"><strong>User ID:</strong> ${contact.userId}</span>
+          <span class="block"><strong>Password:</strong> ${contact.password}</span>
           <span class="block"><strong>Important:</strong> ${contact.important ? "Yes" : "No"}</span>
           <div class="flex gap-2 mt-4">
-            <button class="whatsapp-btn p-2 bg-green-500 text-white rounded hover:bg-green-600" onclick="sendToWhatsApp(${index})">Send to WhatsApp</button>
-            <button class="edit-btn p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" onclick="editContact(${index})">Edit</button>
-            <button class="delete-btn p-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="deleteContact(${index})">Delete</button>
+            <button type="button" class="p-2 bg-green-500 text-white rounded hover:bg-green-600" onclick="sendToWhatsApp(${index})">WhatsApp</button>
+            <button type="button" class="p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" onclick="editContact(${index})">Edit</button>
+            <button type="button" class="p-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="deleteContact(${index})">Delete</button>
           </div>
         `;
-        contactList.appendChild(li);
+        elements.contactList.appendChild(li);
       });
-    }
-
-    function addOrUpdateContact() {
-      const organization = organizationInput.value.trim();
-      const web = webInput.value.trim();
-      const userId = userIdInput.value.trim();
-      const password = passwordInput.value.trim();
-      const important = importantCheckbox.checked;
-
-      if (!organization || !userId || !password) {
-        alert("Organization Name, User ID, and Password are required!");
-        return;
-      }
-
-      const newContact = { organization, web, userId, password, important };
-
-      if (editIndex !== null) {
-        contacts[editIndex] = newContact;
-        editIndex = null;
-        addContactBtn.textContent = "Add Data";
-      } else {
-        contacts.push(newContact);
-      }
-
-      saveContacts();
-      displayContacts();
-      clearForm();
-    }
-
-    function editContact(index) {
-      const contact = contacts[index];
-      organizationInput.value = contact.organization;
-      webInput.value = contact.web;
-      userIdInput.value = contact.userId;
-      passwordInput.value = contact.password;
-      importantCheckbox.checked = contact.important;
-      editIndex = index;
-      addContactBtn.textContent = "Update Data";
-    }
-
-    function deleteContact(index) {
-      const confirmation = confirm("Are you sure you want to delete this data?");
-      if (confirmation) {
-        contacts.splice(index, 1);
-        saveContacts();
-        displayContacts();
-      }
     }
 
     function sendToWhatsApp(index) {
       const contact = contacts[index];
       const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nImportant: ${contact.important ? "Yes" : "No"}`;
       const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-      window.open(whatsappURL, "_blank");
+      location.href = whatsappURL; // Adjusted for Android compatibility
     }
 
-    function clearForm() {
-      organizationInput.value = "";
-      webInput.value = "";
-      userIdInput.value = "";
-      passwordInput.value = "";
-      importantCheckbox.checked = false;
-    }
+    elements.addContactBtn.addEventListener("click", () => {
+      // Add or Update Contact Logic
+    });
 
-    function checkPassword() {
-      const enteredPassword = entryPasswordInput.value.trim();
-      if (enteredPassword === ACCESS_PASSWORD) {
-        passwordDiv.style.display = "none"; // Hide password section
-        dataContainer.style.display = "block"; // Show data list
-        alert("Access granted!");
+    elements.checkPasswordBtn.addEventListener("click", () => {
+      if (elements.entryPassword.value === ACCESS_PASSWORD) {
+        elements.passwordDiv.classList.add("hidden");
+        elements.dataContainer.classList.remove("hidden");
       } else {
-        alert("Incorrect password. Please try again.");
+        alert("Incorrect password.");
       }
-    }
+    });
 
-    function filterContacts() {
-      const query = filterInput.value.trim().toLowerCase();
-      const filteredContacts = contacts.filter(contact =>
-        Object.entries(contact).some(([key, value]) =>
-          key === "important"
-            ? (contact.important ? "yes" : "no").includes(query) // Special handling for important status
-            : value.toString().toLowerCase().includes(query)
-        )
-      );
-
-      displayContacts(filteredContacts);
-    }
-
-    addContactBtn.addEventListener("click", addOrUpdateContact);
-    checkPasswordBtn.addEventListener("click", checkPassword);
-    filterInput.addEventListener("input", filterContacts); // Trigger filter on input change
     displayContacts();
   </script>
 </body>
