@@ -136,11 +136,24 @@
     }
 
     function sendToWhatsApp(index) {
-      const contact = contacts[index];
-      const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
-      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-      window.open(whatsappURL, "_blank");
-    }
+    const contact = contacts[index];
+    const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
+    const encodedMessage = encodeURIComponent(message);
+  
+    // Deep link for Android to open the WhatsApp app directly
+    const whatsappURL = `whatsapp://send?text=${encodedMessage}`;
+    
+    // Fallback for other devices or if WhatsApp is not installed
+    const fallbackURL = `https://wa.me/?text=${encodedMessage}`;
+    
+    // Try opening the WhatsApp app; fallback to the web version
+    window.location.href = whatsappURL;
+  
+    setTimeout(() => {
+      window.open(fallbackURL, "_blank");
+    }, 500);
+  }
+
 
     function clearForm() {
       elements.organization.value = "";
