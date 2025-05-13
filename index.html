@@ -138,10 +138,16 @@
     function sendToWhatsApp(index) {
   const contact = contacts[index];
   const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
-  const whatsappURL = `intent://send/?text=${encodeURIComponent(message)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+  const whatsappDeepLink = `whatsapp://send?text=${encodeURIComponent(message)}`;
+  const intentLink = `intent://${whatsappDeepLink.slice(10)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
-  // Attempt to open the WhatsApp app
-  window.location.href = whatsappURL;
+  // Try deep link first
+  window.location.href = whatsappDeepLink;
+
+  // If the app does not open, fallback to the intent link
+  setTimeout(() => {
+    window.location.href = intentLink;
+  }, 1000);
 }
 
     function clearForm() {
