@@ -12,13 +12,13 @@
     <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
       <input type="password" id="entryPassword" placeholder="Enter Password to Access Data" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
       <button type="button" id="checkPassword" class="p-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
-        Check Password
+        Get Access
       </button>
     </div>
     <div id="dataContainer" class="hidden mt-6">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-semibold text-gray-800">Input Your Data</h2>
-        <button type="button" id="exitButton" class="p-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600">
+        <button type="button" id="exitButton" class="p-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600">
           Exit
         </button>
       </div>
@@ -141,9 +141,8 @@
     const encodedMessage = encodeURIComponent(message);
   
     // Deep link for Android to open the WhatsApp app directly
-    //const whatsappURL = `whatsapp://send?text=${encodedMessage}`;
-      const whatsappURL = `https://api.whatsapp.com/?text=${encodedMessage}`;
-    
+    const whatsappURL = `whatsapp://send?text=${encodedMessage}`;
+      
     // Fallback for other devices or if WhatsApp is not installed
     const fallbackURL = `https://wa.me/?text=${encodedMessage}`;
     
