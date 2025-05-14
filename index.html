@@ -3,12 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Integration</title>
+  <title>CSV Integration with Data Insertion</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
   <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
     <h1 class="text-2xl font-bold text-center text-gray-800">Significant Data Holder</h1>
+
+    <!-- CSV File Upload Section -->
+    <div class="flex flex-col items-center mt-6">
+      <label for="csvFile" class="mb-2 text-gray-600">Upload CSV File:</label>
+      <input type="file" id="csvFile" accept=".csv" class="mb-4">
+      <button id="importCSV" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
+        Import CSV
+      </button>
+    </div>
 
     <!-- Password Section -->
     <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
@@ -29,6 +38,23 @@
       <input type="text" id="filterInput" placeholder="Search..." class="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
       <ul id="contactList" class="list-none mt-4 space-y-4"></ul>
     </div>
+
+    <!-- Data Insertion Form -->
+    <div id="insertDataDiv" class="flex flex-col gap-4 mt-6">
+      <h3 class="text-lg font-semibold text-gray-700">Insert New Data</h3>
+      <input type="text" id="newOrganization" placeholder="Organization" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" id="newWeb" placeholder="Web" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" id="newUserId" placeholder="User ID" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="password" id="newPassword" placeholder="Password" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <select id="newImportant" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Is Important?</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+      <button id="addDataButton" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
+        Add Data
+      </button>
+    </div>
   </div>
 
   <footer class="text-center mt-5 text-sm text-gray-500">
@@ -37,15 +63,28 @@
 
   <script>
     const ACCESS_PASSWORD = "12345"; // Replace with your secure password
-    const CSV_URL = "https://raw.githubusercontent.com/ssumir/data/main/data.csv"; // Replace with your GitHub raw CSV file URL
     let contacts = [];
     const contactList = document.getElementById("contactList");
+    const importCSVButton = document.getElementById("importCSV");
+    const csvFileInput = document.getElementById("csvFile");
     const entryPasswordInput = document.getElementById("entryPassword");
     const checkPasswordBtn = document.getElementById("checkPassword");
     const passwordDiv = document.getElementById("passwordDiv");
     const dataContainer = document.getElementById("dataContainer");
     const filterInput = document.getElementById("filterInput");
     const exitButton = document.getElementById("exitButton");
+
+    // DOM Elements for Insertion
+    const newOrganization = document.getElementById("newOrganization");
+    const newWeb = document.getElementById("newWeb");
+    const newUserId = document.getElementById("newUserId");
+    const newPassword = document.getElementById("newPassword");
+    const newImportant = document.getElementById("newImportant");
+    const addDataButton = document.getElementById("addDataButton");
+
+    function saveContacts() {
+      localStorage.setItem("contacts", JSON.stringify(contacts));
+    }
 
     function displayContacts(filteredContacts = contacts) {
       contactList.innerHTML = "";
@@ -63,14 +102,11 @@
       });
     }
 
-    async function fetchCSV() {
-      try {
-        const response = await fetch(CSV_URL);
-        if (!response.ok) {
-          throw new Error("Failed to fetch CSV file.");
-        }
-        const csvData = await response.text();
-        const rows = csvData.split("\n").slice(1); // Remove the header row
+    function parseCSV(file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const csvData = event.target.result;
+        const rows = csvData.split("\n");
         rows.forEach((row) => {
           const [organization, web, userId, password, important] = row.split(",");
           if (organization && userId && password) {
@@ -83,11 +119,10 @@
             });
           }
         });
+        saveContacts();
         displayContacts();
-      } catch (error) {
-        console.error("Error fetching CSV:", error);
-        alert("Failed to fetch CSV file. Please check the URL or network connection.");
-      }
+      };
+      reader.readAsText(file);
     }
 
     function checkPassword() {
@@ -95,7 +130,7 @@
       if (enteredPassword === ACCESS_PASSWORD) {
         passwordDiv.style.display = "none"; // Hide password section
         dataContainer.style.display = "block"; // Show data container
-        fetchCSV(); // Fetch and display CSV data
+        displayContacts();
         alert("Access granted!");
       } else {
         alert("Incorrect password. Please try again.");
@@ -120,9 +155,50 @@
       entryPasswordInput.value = ""; // Clear password input
     }
 
+    // Add New Contact
+    function addNewContact() {
+      const organization = newOrganization.value.trim();
+      const web = newWeb.value.trim();
+      const userId = newUserId.value.trim();
+      const password = newPassword.value.trim();
+      const important = newImportant.value.trim().toLowerCase() === "yes";
+
+      if (!organization || !userId || !password) {
+        alert("Please fill out all required fields (Organization, User ID, Password).");
+        return;
+      }
+
+      const newContact = { organization, web, userId, password, important };
+      contacts.push(newContact); // Add to local array
+      saveContacts(); // Save to localStorage
+      displayContacts(); // Refresh display
+      clearInsertForm(); // Clear the form
+
+      alert("New contact added successfully!");
+    }
+
+    // Clear Insert Form
+    function clearInsertForm() {
+      newOrganization.value = "";
+      newWeb.value = "";
+      newUserId.value = "";
+      newPassword.value = "";
+      newImportant.value = "";
+    }
+
+    importCSVButton.addEventListener("click", () => {
+      const file = csvFileInput.files[0];
+      if (!file) {
+        alert("Please select a CSV file first.");
+        return;
+      }
+      parseCSV(file);
+    });
+
     checkPasswordBtn.addEventListener("click", checkPassword);
     filterInput.addEventListener("input", filterContacts);
     exitButton.addEventListener("click", exitDataContainer);
+    addDataButton.addEventListener("click", addNewContact);
   </script>
 </body>
 </html>
