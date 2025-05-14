@@ -3,80 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Data Integration</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-    th {
-      background-color: #f4f4f4;
-    }
-  </style>
+  <title>CSV Integration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>CSV Data Display</h1>
-  <div id="csvTable"></div>
+<body class="bg-gray-100">
+  <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold text-center text-gray-800">Significant Data Holder</h1>
+
+    <!-- CSV File Upload Section -->
+    <div class="flex flex-col items-center mt-6">
+      <label for="csvFile" class="mb-2 text-gray-600">Upload CSV File:</label>
+      <input type="file" id="csvFile" accept=".csv" class="mb-4">
+      <button id="importCSV" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
+        Import CSV
+      </button>
+    </div>
+
+    <!-- Password Section -->
+    <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
+      <input type="password" id="entryPassword" placeholder="Enter Password to Access Data" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button id="checkPassword" class="p-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+        Check Password
+      </button>
+    </div>
+
+    <!-- Data Container -->
+    <div id="dataContainer" class="hidden mt-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Data List</h2>
+        <button id="exitButton" class="p-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600">
+          Exit
+        </button>
+      </div>
+      <input type="text" id="filterInput" placeholder="Search..." class="p-3 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+      <ul id="contactList" class="list-none mt-4 space-y-4"></ul>
+    </div>
+  </div>
+
+  <footer class="text-center mt-5 text-sm text-gray-500">
+    Powered by Eng. Saiful Islam (Sumir).
+  </footer>
 
   <script>
-    // URL to your CSV file in the GitHub repository
-    const csvUrl = "https://raw.githubusercontent.com/username/data/main/data.csv";
+    const ACCESS_PASSWORD = "12345"; // Replace with your secure password
+    let contacts = [];
+    const contactList = document.getElementById("contactList");
+    const importCSVButton = document.getElementById("importCSV");
+    const csvFileInput = document.getElementById("csvFile");
+    const entryPasswordInput = document.getElementById("entryPassword");
+    const checkPasswordBtn = document.getElementById("checkPassword");
+    const passwordDiv = document.getElementById("passwordDiv");
+    const dataContainer = document.getElementById("dataContainer");
+    const filterInput = document.getElementById("filterInput");
+    const exitButton = document.getElementById("exitButton");
 
-    // Function to fetch and parse CSV
-    async function fetchAndDisplayCSV() {
-      try {
-        const response = await fetch(csvUrl);
-        const csvText = await response.text();
-
-        // Parse CSV using PapaParse
-        Papa.parse(csvText, {
-          header: true, // Treat the first row as headers
-          complete: function(results) {
-            displayTable(results.data);
-          },
-        });
-      } catch (error) {
-        console.error("Error fetching or parsing the CSV file:", error);
-      }
+    function saveContacts() {
+      localStorage.setItem("contacts", JSON.stringify(contacts));
     }
 
-    // Function to display data in a table
-    function displayTable(data) {
-      const table = document.createElement("table");
-      const headerRow = document.createElement("tr");
-
-      // Add headers
-      if (data.length > 0) {
-        Object.keys(data[0]).forEach(header => {
-          const th = document.createElement("th");
-          th.textContent = header;
-          headerRow.appendChild(th);
-        });
-        table.appendChild(headerRow);
-      }
-
-      // Add rows
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        Object.values(row).forEach(cell => {
-          const td = document.createElement("td");
-          td.textContent = cell;
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
+    function displayContacts(filteredContacts = contacts) {
+      contactList.innerHTML = "";
+      filteredContacts.forEach((contact, index) => {
+        const li = document.createElement("li");
+        li.className = "p-4 bg-gray-200 rounded-lg shadow-sm";
+        li.innerHTML = `
+          <span class="block font-medium"><strong>Organization:</strong> ${contact.organization}</span>
+          <span class="block"><strong>Web:</strong> ${contact.web}</span>
+          <span class="block"><strong>User ID:</strong> ${contact.userId}</span>
+          <span class="block"><strong>Password:</strong> ${contact.password}</span>
+          <span class="block"><strong>Important:</strong> ${contact.important ? "Yes" : "No"}</span>
+        `;
+        contactList.appendChild(li);
       });
-
-      document.getElementById("csvTable").appendChild(table);
     }
 
-    // Fetch and display the CSV on page load
-    fetchAndDisplayCSV();
+    function parseCSV(file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const csvData = event.target.result;
+        const rows = csvData.split("\n");
+        rows.forEach((row) => {
+          const [organization, web, userId, password, important] = row.split(",");
+          if (organization && userId && password) {
+            contacts.push({
+              organization: organization.trim(),
+              web: web?.trim() || "",
+              userId: userId.trim(),
+              password: password.trim(),
+              important: important?.trim().toLowerCase() === "yes"
+            });
+          }
+        });
+        saveContacts();
+        displayContacts();
+      };
+      reader.readAsText(file);
+    }
+
+    function checkPassword() {
+      const enteredPassword = entryPasswordInput.value.trim();
+      if (enteredPassword === ACCESS_PASSWORD) {
+        passwordDiv.style.display = "none"; // Hide password section
+        dataContainer.style.display = "block"; // Show data container
+        displayContacts();
+        alert("Access granted!");
+      } else {
+        alert("Incorrect password. Please try again.");
+      }
+    }
+
+    function filterContacts() {
+      const query = filterInput.value.trim().toLowerCase();
+      const filteredContacts = contacts.filter((contact) =>
+        Object.entries(contact).some(([key, value]) =>
+          key === "important"
+            ? (contact.important ? "yes" : "no").includes(query)
+            : value.toString().toLowerCase().includes(query)
+        )
+      );
+      displayContacts(filteredContacts);
+    }
+
+    function exitDataContainer() {
+      dataContainer.style.display = "none"; // Hide data container
+      passwordDiv.style.display = "block"; // Show password input section
+      entryPasswordInput.value = ""; // Clear password input
+    }
+
+    importCSVButton.addEventListener("click", () => {
+      const file = csvFileInput.files[0];
+      if (!file) {
+        alert("Please select a CSV file first.");
+        return;
+      }
+      parseCSV(file);
+    });
+
+    checkPasswordBtn.addEventListener("click", checkPassword);
+    filterInput.addEventListener("input", filterContacts);
+    exitButton.addEventListener("click", exitDataContainer);
   </script>
 </body>
 </html>
