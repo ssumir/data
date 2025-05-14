@@ -10,15 +10,6 @@
   <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
     <h1 class="text-2xl font-bold text-center text-gray-800">Significant Data Holder</h1>
 
-    <!-- CSV File Upload Section -->
-    <div class="flex flex-col items-center mt-6">
-      <label for="csvFile" class="mb-2 text-gray-600">Upload CSV File:</label>
-      <input type="file" id="csvFile" accept=".csv" class="mb-4">
-      <button id="importCSV" class="p-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
-        Import CSV
-      </button>
-    </div>
-
     <!-- Password Section -->
     <div id="passwordDiv" class="flex flex-col gap-4 mt-6">
       <input type="password" id="entryPassword" placeholder="Enter Password to Access Data" class="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -46,10 +37,9 @@
 
   <script>
     const ACCESS_PASSWORD = "12345"; // Replace with your secure password
+    const CSV_URL = "https://raw.githubusercontent.com/username/data/main/data.csv"; // Replace with your GitHub raw CSV file URL
     let contacts = [];
     const contactList = document.getElementById("contactList");
-    const importCSVButton = document.getElementById("importCSV");
-    const csvFileInput = document.getElementById("csvFile");
     const entryPasswordInput = document.getElementById("entryPassword");
     const checkPasswordBtn = document.getElementById("checkPassword");
     const passwordDiv = document.getElementById("passwordDiv");
@@ -57,13 +47,9 @@
     const filterInput = document.getElementById("filterInput");
     const exitButton = document.getElementById("exitButton");
 
-    function saveContacts() {
-      localStorage.setItem("contacts", JSON.stringify(contacts));
-    }
-
     function displayContacts(filteredContacts = contacts) {
       contactList.innerHTML = "";
-      filteredContacts.forEach((contact, index) => {
+      filteredContacts.forEach((contact) => {
         const li = document.createElement("li");
         li.className = "p-4 bg-gray-200 rounded-lg shadow-sm";
         li.innerHTML = `
@@ -77,11 +63,14 @@
       });
     }
 
-    function parseCSV(file) {
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const csvData = event.target.result;
-        const rows = csvData.split("\n");
+    async function fetchCSV() {
+      try {
+        const response = await fetch(CSV_URL);
+        if (!response.ok) {
+          throw new Error("Failed to fetch CSV file.");
+        }
+        const csvData = await response.text();
+        const rows = csvData.split("\n").slice(1); // Remove the header row
         rows.forEach((row) => {
           const [organization, web, userId, password, important] = row.split(",");
           if (organization && userId && password) {
@@ -94,10 +83,11 @@
             });
           }
         });
-        saveContacts();
         displayContacts();
-      };
-      reader.readAsText(file);
+      } catch (error) {
+        console.error("Error fetching CSV:", error);
+        alert("Failed to fetch CSV file. Please check the URL or network connection.");
+      }
     }
 
     function checkPassword() {
@@ -105,7 +95,7 @@
       if (enteredPassword === ACCESS_PASSWORD) {
         passwordDiv.style.display = "none"; // Hide password section
         dataContainer.style.display = "block"; // Show data container
-        displayContacts();
+        fetchCSV(); // Fetch and display CSV data
         alert("Access granted!");
       } else {
         alert("Incorrect password. Please try again.");
@@ -129,15 +119,6 @@
       passwordDiv.style.display = "block"; // Show password input section
       entryPasswordInput.value = ""; // Clear password input
     }
-
-    importCSVButton.addEventListener("click", () => {
-      const file = csvFileInput.files[0];
-      if (!file) {
-        alert("Please select a CSV file first.");
-        return;
-      }
-      parseCSV(file);
-    });
 
     checkPasswordBtn.addEventListener("click", checkPassword);
     filterInput.addEventListener("input", filterContacts);
