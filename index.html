@@ -105,7 +105,8 @@ function displayContacts(filteredContacts = contacts) {
 function sendToWhatsApp(index) {
   const contact = contacts[index];
   const message = `Organization: ${contact.organization}\nWeb: ${contact.web}\nUser ID: ${contact.userId}\nPassword: ${contact.password}\nImportant: ${contact.important ? "Yes" : "No"}`;
-  const whatsappWebLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  // const whatsappWebLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const whatsappWebLink = `https://web.whatsapp.com/send?phone=${encodeURIComponent(message)}`;
   window.open(whatsappWebLink, "_blank");
 }
 
